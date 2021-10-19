@@ -8,6 +8,7 @@ public class Timer {
 	
 	public void startLap() {
 		lap_start = System.currentTimeMillis();
+		
 		if (origin == -1) {
 			origin = lap_start;
 		}
@@ -18,6 +19,10 @@ public class Timer {
 		lap_total += last_lap;
 		lap_cnt ++;
 		
+		return last_lap;
+	}
+	
+	public long lastLap() {
 		return last_lap;
 	}
 
