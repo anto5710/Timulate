@@ -23,6 +23,7 @@ public class Timulator <F extends Timable<T, R>, T, R> implements ITimulator<F, 
 	
 	public Timulator(TestWriter<T, R> tester, int set_size, boolean fail_break) {
 		setTestsetSize(set_size);
+		this.tester = tester;
 		this.fail_break = fail_break;
 	}
 	
@@ -36,23 +37,32 @@ public class Timulator <F extends Timable<T, R>, T, R> implements ITimulator<F, 
 	
 	@Override
 	public void timulate(int size) {
+		if (timerMap.size() <= 0) {
+			System.err.println("Empty timulator set!");
+			return;
+		}
 		
 		headTestset();
-
+		
 		for (int i = 0; i < size; i++) {		
 			Test<T, R> test = tester.generateTest();
 		
 			headTest(test, i, size);
-			runTest(test, i, size);
+			
+			boolean testrun = runTest(test, i, size);
+			
+			if(fail_break && !testrun) {
+				break;
+			}
+			
 			footTest(test, i, size);
 		}
 		
 		footTestset();
 	}
 
-	protected void runTest(Test<T, R> test, int i, int size) {
+	protected boolean runTest(Test<T, R> test, int i, int size) {
 		T arg	 = test.getArgument();
-		R answer = test.getAnswer();
 		
 		for (F timable : getTimables()) {
 			headResponse(timable, test, i , size);
@@ -66,14 +76,21 @@ public class Timulator <F extends Timable<T, R>, T, R> implements ITimulator<F, 
 			TimulateEvent<T, R> e
 			 = new TimulateEvent<>(timable, test, response, timer, i, size);
 
-			if (tester.mark(response, answer)) {
+			if (!test.isResolved()) {
+				test.setAnswer(response);
+			}
+			
+			if (tester.mark(test, response)) {
 				succeed(e);
 			} else {
 				fail(e);
+				if (fail_break) return false;
 			}
 
 			footResponse(e);
 		}
+		
+		return true;
 	}
 	
 	protected void headTestset() {}

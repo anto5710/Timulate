@@ -22,9 +22,10 @@ public class TimulateEvent <T, R> implements ITestEvent<T, R>{
 	private static String form_stacktrace = 
 			"Test (%d/%d)\n" +
 			"%s: \n" +
-			"\tInput : %s\n" +
-			"\tResult: %s\n" +
-			"\tLap   : ~ %fs";
+			"\tArgument: %s\n" +
+			"\tResponse: %s\n" +
+			"\tAnswer  : %s\n" +
+			"\tLap     : ~ %fs";
 	
 	
 	public TimulateEvent(Timable<T, R> timable, Test<T, R> test, R response, Timer timer, int set_index, int set_size) {
@@ -62,16 +63,31 @@ public class TimulateEvent <T, R> implements ITestEvent<T, R>{
 	
 	private void formatTraces() {	
 		T arg = getArgument();
-		String arg_str = arg.getClass().isArray() ? Arrays.toString((int[])arg) : arg.toString();
-		String res_str = response.getClass().isArray() ? Arrays.toString((int[])response) : response.toString();
+		R answer = getTest().getAnswer();
+		
+		String arg_str = getString(arg);
+		String response_str = getString(response);
+		String answer_str = getString(answer);
+		
 		String name	   = timable.getName();
 
 		double lap_s   = timer.lapAverage()/1000D;
 		double lap	   = timer.lapAverage();
 		
-		shorttrace = String.format(form_shorttrace, name, res_str, lap);
-		stacktrace = String.format(form_stacktrace, set_index, set_size, name, arg_str, res_str, lap_s);
+		shorttrace = String.format(form_shorttrace, name, response_str, lap);
+		stacktrace = String.format(form_stacktrace, set_index, set_size, name, arg_str, response_str, answer_str, lap_s);
 		
+	}
+	
+	private String getString(Object obj) {
+		if (obj == null) {
+			return "<Undefined>";
+		}
+		
+		if (obj instanceof int[]) {
+			return Arrays.toString((int[])obj);
+		}
+		return obj.toString();
 	}
 	
 	@Override
