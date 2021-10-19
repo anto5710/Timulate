@@ -2,18 +2,19 @@ package main.event;
 
 import java.util.Arrays;
 
-import main.Timable;
 import main.Timer;
+import main.test.Test;
+import main.test.Timable;
 
 public class TimulateEvent <T, R> implements ITestEvent<T, R>{
 	private Timable<T, R> timable;
 	private Timer timer;
 	
-	private T arg;
-	private R result;
+	private Test<T, R> test;
+	private R response;
 	
-	private int pool_index;
-	private int pool_size;
+	private int set_index;
+	private int set_size;
 	
 	private String stacktrace, shorttrace;
 	
@@ -26,25 +27,29 @@ public class TimulateEvent <T, R> implements ITestEvent<T, R>{
 			"\tLap   : ~ %fs";
 	
 	
-	public TimulateEvent(Timable<T, R> timable, T arg, R result, Timer timer, int pool_index, int pool_size) {
+	public TimulateEvent(Timable<T, R> timable, Test<T, R> test, R response, Timer timer, int set_index, int set_size) {
 		this.timable 	= timable;
 		this.timer		= timer;
-		this.arg		= arg;
-		this.result     = result;
-		this.pool_index = pool_index;
-		this.pool_size  = pool_size;
+		this.test		= test;
+		this.response     = response;
+		this.set_index  = set_index;
+		this.set_size   = set_size;
 		
 		formatTraces();
 	}
 	
 	@Override
+	public Test<T, R> getTest() {
+		return test;
+	}
+	
 	public T getArgument() {
-		return arg;
+		return test.getArgument();
 	}
 
 	@Override
-	public R getResult() {
-		return result;
+	public R getResponse() {
+		return response;
 	}
 	
 	public Timable<T, R> getTimable() {
@@ -55,16 +60,17 @@ public class TimulateEvent <T, R> implements ITestEvent<T, R>{
 		return timer;
 	}
 	
-	private void formatTraces() {
-		String arg_str = arg.getClass().isArray()    ? Arrays.toString((int[])arg)    : arg.toString();
-		String res_str = result.getClass().isArray() ? Arrays.toString((int[])result) : result.toString();
+	private void formatTraces() {	
+		T arg = getArgument();
+		String arg_str = arg.getClass().isArray() ? Arrays.toString((int[])arg) : arg.toString();
+		String res_str = response.getClass().isArray() ? Arrays.toString((int[])response) : response.toString();
 		String name	   = timable.getName();
 
 		double lap_s   = timer.lapAverage()/1000D;
 		double lap	   = timer.lapAverage();
 		
 		shorttrace = String.format(form_shorttrace, name, res_str, lap);
-		stacktrace = String.format(form_stacktrace, pool_index, pool_size, name, arg_str, res_str, lap_s);
+		stacktrace = String.format(form_stacktrace, set_index, set_size, name, arg_str, res_str, lap_s);
 		
 	}
 	

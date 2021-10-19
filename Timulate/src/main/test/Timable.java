@@ -1,4 +1,4 @@
-package main;
+package main.test;
 
 public interface Timable <T, R> {
 	public String getName();
