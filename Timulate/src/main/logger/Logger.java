@@ -1,65 +1,190 @@
 package main.logger;
 
 import java.io.PrintStream;
+import java.util.Stack;
 
 public class Logger {
-	private String header;
-	private String indenter;
-	private String indenture;
-	private String line_break;
 	
-	private int indent_level;
+	protected Stack<String> indent_stack	= new Stack<>();
+	protected String indent_str 			= "";
 	
-	private StreamType pstype;
+	protected String line_separator			= "\n";
+	protected String space					= " ";
+	private String master_header			= null;
+	
+	private StreamType pstype 				= StreamType.SYSTEM_OUT;
 	
 	private enum StreamType {
 		SYSTEM_OUT, SYSTEM_ERR;
 	}
-	
-	public Logger(String header, String indenter, String line_break) {
-		this.header = header;
-		this.indenter = indenter;
-		this.indenture = "s";
-		this.indent_level = 0;
-		this.line_break = line_break;
-	
-		streamOut();
-	}
-	
-	public Logger(String header) {
-		this(header, "\t", "\n");
+		
+	public Logger(String master_header) {
+		this.master_header = master_header;
+		setStreamOut();
 	}
 	
 	public Logger() {
-		this("");
+		this(null);
 	}
 	
-	public void print(Object msg) {
+	public void println(Object obj) {
+		print(obj);
+		endl();
+	}
+	
+	public void print(Object obj) {
 		PrintStream ps = getPrintStream();
-		if(ps != null) {
+		if (ps == null) {
+			return;
+		}
+		
+		String obj_str = String.valueOf(obj);
+		
+		String [] lines = obj_str.split(line_separator);
+		
+		if (lines.length == 0) {
+			ps.print(obj_str);
+			
+		} else {
+			
+			ps.print(lines[0]);
+			for (int i = 1; i < lines.length; i++) {
+				endl();
+				ps.print(lines[i]);
+			}
+		}
+	}
+	
+	public void print(Object obj, String header) {
+		PrintStream ps = getPrintStream();
+		if (ps == null) {
+			return;
+		}
+		
+		if (header != null && !header.isEmpty()) {
+			ps.print(header);
+			indentTo(header);
+		}
+		
+		print(obj);
+	}
+	
+	public void println(Object obj, String header) {
+		PrintStream ps = getPrintStream();
+		if (ps == null) {
+			return;
+		}
+		
+		if ((getIndentLevel() == 0) && (master_header != null)){
+			ps.print(master_header);
+			indentTo(master_header);
+		}
+		
+		if (header != null && !header.isEmpty()) {
+			ps.print(header);
+			indentTo(header);
+		}
+		
+		println(obj);
+	}
+	
+	public void endl() {
+		PrintStream ps = getPrintStream();
+		if (ps == null) {
+			return;
+		}
+		
+		ps.print(line_separator);
+		
+		if(getIndentLevel() > 0) {
 			ps.print(getIndenture());
-			ps.print(msg.toString());
 		}
 	}
 	
-	public void println(Object msg) {
-		if(getIndentLevel() == 0) {
-			printHeader();
+	public String getMasterHeader() {
+		return this.master_header;
+	}
+
+	public void setMasterHeader(String header) {
+		this.master_header = header;
+	}
+
+	public String getIndenture() {
+		return indent_str;
+	}
+	
+	public void dedentAll() {
+		indent_stack.clear();
+		updateIndenture();
+	}
+	
+	public void dedentln() {
+		dedentAll();
+		endl();
+	}
+	
+	protected void updateIndenture() {
+		indent_str = "";
+		indent_stack.forEach(s -> indent_str += s);
+	}
+	
+	public int getIndentLevel() {
+		return indent_stack.size();
+	}
+	
+	public void indentTo(String header) {
+		String indenter = "";
+		
+		for (char c : header.toCharArray()) {
+			indenter += (Character.isWhitespace(c) ? c : ' ');
 		}
-		print(msg.toString().concat(line_break));
+		
+		indent(indenter);
 	}
 	
-	public void printf(String format, Object ... args) {
-		print(String.format(format, args)); 
+	public boolean indentSpaces(int length) {
+		String spaces = "";
+		
+		for (int i = 0; i < length; i++) {
+			spaces += space;
+		}
+		
+		return indent(spaces);
 	}
 	
-	public void streamOut() {
+	public boolean indent(String indenter) {
+		return indent(indenter, 1);
+	}
+	
+	public boolean indent(String indenter, int amount) {
+		boolean all_added = true;
+		
+		for (int i = 0; i < amount; i++) {
+			if (0 < indenter.length() && !indent_stack.add(indenter)) {
+				all_added = false;
+			}
+		}
+		
+		updateIndenture();
+		return all_added;
+	}
+	
+	public void dedent() {
+		if (!indent_stack.isEmpty()) {
+			indent_stack.pop();
+		}
+		updateIndenture();
+	}
+	
+	public void setStreamOut() {
 		this.pstype = StreamType.SYSTEM_OUT;
 	}
 	
-	public void streamError() {
+	
+	public void setStreamError() {
 		this.pstype = StreamType.SYSTEM_ERR;
 	}
+	
 	
 	public PrintStream getPrintStream() {
 		if(pstype == StreamType.SYSTEM_OUT) {
@@ -70,55 +195,5 @@ public class Logger {
 		}
 		
 		return null;
-	}
-	
-	public void setLineBreak(String line_break) {
-		this.line_break = line_break;
-	}
-	
-	public String getLineBreak() {
-		return this.line_break;
-	}
-	
-	public String getHeader() {
-		return this.header;
-	}
-	
-	public void setHeader(String header) {
-		this.header = header;
-	}
-	
-	public void printHeader() {
-		PrintStream ps = getPrintStream();
-		if(ps != null) {
-			ps.print(getHeader());
-		}
-	}	
-
-	public String getIndenture() {
-		return this.indenture;
-	}
-	
-	private void setIndenture(String indenture) {
-		this.indenture = indenture;
-	}
-	
-	public int getIndentLevel() {
-		return indent_level;
-	}
-	
-	public boolean setIndentLevel(int level) {
-		if(level < 0) {
-			return false;
-		}
-		
-		indent_level = level;
-		StringBuffer buffer = new StringBuffer();
-		for(int i = 0; i < getIndentLevel(); i++) {
-			buffer.append(indenter);
-		}
-		setIndenture(indenture);
-		
-		return true;
 	}
 }
