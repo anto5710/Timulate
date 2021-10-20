@@ -15,7 +15,6 @@ public class Timulator <F extends Timable<T, R>, T, R> implements ITimulator<F, 
 	protected Map<F, Timer> timerMap = new HashMap<>();
 	
 	private TestWriter<T, R> tester;
-	
 	private int set_size;
 	public static final int DEFAULT_TESTSET_SIZE = 1000;
 	
@@ -23,8 +22,13 @@ public class Timulator <F extends Timable<T, R>, T, R> implements ITimulator<F, 
 	
 	public Timulator(TestWriter<T, R> tester, int set_size, boolean fail_break) {
 		setTestsetSize(set_size);
+		
 		this.tester = tester;
 		this.fail_break = fail_break;
+	}
+	
+	public Timulator(TestWriter<T, R> tester, boolean fail_break) {
+		this(tester, DEFAULT_TESTSET_SIZE, fail_break);
 	}
 	
 	public Timulator(TestWriter<T, R> tester) {
@@ -62,7 +66,7 @@ public class Timulator <F extends Timable<T, R>, T, R> implements ITimulator<F, 
 	}
 
 	protected boolean runTest(Test<T, R> test, int i, int size) {
-		T arg	 = test.getArgument();
+		T arg = test.getArgument();
 		
 		for (F timable : getTimables()) {
 			headResponse(timable, test, i , size);
@@ -70,18 +74,18 @@ public class Timulator <F extends Timable<T, R>, T, R> implements ITimulator<F, 
 			Timer timer = get(timable);
 			
 			timer.startLap();
-			R response = timable.timulate(arg);
+			R response = timable.respond(arg);
 			timer.lap();
 			
-			TimulateEvent<T, R> e
-			 = new TimulateEvent<>(timable, test, response, timer, i, size);
+			TimulateEvent<T, R> e = new TimulateEvent<>(timable, test, response, timer, i, size);
 
 			if (!test.isResolved()) {
 				test.setAnswer(response);
 			}
 			
-			if (tester.mark(test, response)) {
+			if (tester.correct(test, response)) {
 				succeed(e);
+				
 			} else {
 				fail(e);
 				if (fail_break) return false;
@@ -102,8 +106,7 @@ public class Timulator <F extends Timable<T, R>, T, R> implements ITimulator<F, 
 			Timer timer = get(timable);
 			double avg = timer.lapAverage();
 			
-			System.out.printf("[%s]:\t", timable.getName());
-			System.out.printf("\tAverage: %fs\t\n", avg/1000D);
+			System.out.printf("[%s]:\tAverage: %fs\\t\\n", timable.getName(), avg/1000D);
 			
 			if(fastest == null || avg < get(fastest).lapAverage()) {
 				fastest = timable;
