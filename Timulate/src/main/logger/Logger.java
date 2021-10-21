@@ -5,14 +5,13 @@ import java.util.Stack;
 
 public class Logger {
 	
-	protected Stack<String> indent_stack	= new Stack<>();
-	protected String indent_str 			= "";
-	
-	protected String line_separator			= "\n";
-	protected String space					= " ";
-	private String master_header			= null;
-	
-	private StreamType pstype 				= StreamType.SYSTEM_OUT;
+	private   StreamType	pstype		 = StreamType.SYSTEM_OUT;
+	protected Stack<String> indent_stack = new Stack<>();
+
+	protected String indent_str		= "";
+	private   String master_header	= null;
+	protected String line_separator	= "\n";
+	protected String space			= " ";
 	
 	private enum StreamType {
 		SYSTEM_OUT, SYSTEM_ERR;
@@ -29,7 +28,7 @@ public class Logger {
 	
 	public void println(Object obj) {
 		print(obj);
-		endl();
+		dedentln();
 	}
 	
 	public void print(Object obj) {
@@ -39,15 +38,14 @@ public class Logger {
 		}
 		
 		String obj_str = String.valueOf(obj);
-		
 		String [] lines = obj_str.split(line_separator);
 		
 		if (lines.length == 0) {
 			ps.print(obj_str);
 			
 		} else {
-			
 			ps.print(lines[0]);
+			
 			for (int i = 1; i < lines.length; i++) {
 				endl();
 				ps.print(lines[i]);
@@ -166,6 +164,7 @@ public class Logger {
 		}
 		
 		updateIndenture();
+		
 		return all_added;
 	}
 	
@@ -180,11 +179,9 @@ public class Logger {
 		this.pstype = StreamType.SYSTEM_OUT;
 	}
 	
-	
 	public void setStreamError() {
 		this.pstype = StreamType.SYSTEM_ERR;
 	}
-	
 	
 	public PrintStream getPrintStream() {
 		if(pstype == StreamType.SYSTEM_OUT) {

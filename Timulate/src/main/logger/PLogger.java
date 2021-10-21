@@ -3,15 +3,16 @@ package main.logger;
 import java.util.function.Function;
 
 public class PLogger extends Logger{
-	protected String delimiter;
-	protected String bracket_open, bracket_close;
+	protected ArrayFormat matrix_format = ArrayFormat.EMPTY_TABS;
+	protected ArrayFormat array_format  = ArrayFormat.SQUARE_COMMA;
 	
-	public void printString(Object str) {
+	public void printToString(Object str) {
 		super.print(str);
 	}
 	
 	public void print(Object obj) {
 		if(obj != null && obj.getClass().isArray()) {
+			
 			if(obj instanceof Object[]) {
 				printMatrix((Object[])obj);
 				
@@ -41,37 +42,46 @@ public class PLogger extends Logger{
 			}
 			
 		} else {
-			printString(obj);
+			printToString(obj);
 		}
 	}
 	
-	public void printMatrix(Object[] matrix) {
-		printMatrix(matrix, "", "", "\t", true);
+
+	private void iterateArray(Object array, int length, Function<Integer, String> iterator) {
+		iterateArray(array, length, array_format.bracketOpen(), 
+									array_format.bracketClose(), 
+									array_format.delimiter(), iterator);
 	}
 	
-	protected void printMatrix(Object[] matrix, String bracket_open, String bracket_close, String delimiter, boolean outermost) {
+	public void printMatrix(Object[] matrix) {
+		printMatrix(matrix, matrix_format.bracketOpen(), 
+							matrix_format.bracketClose(), 
+							matrix_format.delimiter(), 0);
+	}
+	
+	protected void printMatrix(Object[] matrix, String bracket_open, String bracket_close, String delimiter, int depth) {
 		if(matrix == null) {
 			print(matrix);
 			return;
 		}
 		
-		printString(bracket_open);
+		printToString(bracket_open);
 		indentTo(bracket_open);
 		
 		for(int i = 0; i < matrix.length; i++) {
 
 			Object e = matrix[i];
-			if(isMatrix(e)) {
-				printMatrix((Object[]) e, bracket_open, bracket_close, delimiter, false);
+			if(e != null && e instanceof Object[]) {
+				printMatrix((Object[]) e, bracket_open, bracket_close, delimiter, depth - 1);
 				
 			} else {
 				print(e);
 			}
 			
 			if(i < matrix.length - 1) {
-				printString(delimiter);
+				printToString(delimiter);
 				
-				if (outermost) {
+				if (depth == 0) {
 					endl();
 				}
 			}
@@ -81,19 +91,11 @@ public class PLogger extends Logger{
 			dedent();
 		}
 
-		printString(bracket_close);
+		printToString(bracket_close);
 	}
 	
-	private boolean isMatrix(Object array) {
-		return array != null && array instanceof Object[];
-	}
-	
-	private void iterateArray(Object array, int length, Function<Integer, String> iterator) {
-		iterateArray(array, length, "[", "]", ", ", iterator);
-	}
-	
-	private void iterateArray(Object array, int length, String bracket_open, String bracket_close, String delimiter, 
-							  Function<Integer, String> iterator) {
+	protected void iterateArray(Object array, int length, String bracket_open, String bracket_close, String delimiter, 
+								Function<Integer, String> iterator) {
 		if(array == null) {
 			print(array);
 			return;
