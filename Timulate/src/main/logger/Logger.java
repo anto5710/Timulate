@@ -3,6 +3,13 @@ package main.logger;
 import java.io.PrintStream;
 import java.util.Stack;
 
+/**
+ * A standard PrintStream buffer that supports nested headers and soft indentations.<br>
+ * Designed to provide a quick way to print "[header]: result"<br>
+ * Indentations are accumulated into a stack, enabling quick in/decrementing of indenter.
+ * 
+ * @author anto5710
+ */
 public class Logger {
 	
 	protected Stack<String> indent_stack = new Stack<>();
@@ -26,15 +33,26 @@ public class Logger {
 		this(null);
 	}
 	
+	/**
+	 * Prints object with a master header if at the start of command line (zero indentation),
+	 * then briefly cancels the header's indentation.
+	 * @param obj The object to be printed.
+	 */
 	public void println(Object obj) {
 		if (getIndentLevel() == 0){
 			printMaster();
 		}
 		
 		print(obj);
-		dedentAllln();
+		dedentln();
 	}
 	
+	/**
+	 * Prints object, separating it to multiple string lines if necessary.
+	 * Each line break will provoke an indentation at new line.
+	 * 
+	 * @param obj The object to be printed.
+	 */
 	public void print(Object obj) {
 		PrintStream ps = getPrintStream();
 		if (ps == null) {
@@ -71,25 +89,45 @@ public class Logger {
 		print(String.format(format, args));
 	}
 	
+	/**
+	 * Prints header and object, separating it to multiple string lines if necessary.
+	 * Each line break will provoke an indentation at new line to match the header length.
+	 * 
+	 * @param obj The object to be printed.
+	 */
 	public void print(Object obj, String header) {
 		printHeader(header);		
 		print(obj);
 	}
 	
+	/**
+	 * Prints header and object with a master header if at the start of command line (zero indentation),
+	 * then briefly cancels the header and master header's indentation.
+	 *
+	 * @param obj The object to be printed.
+	 */
 	public void println(Object obj, String header) {
 		if (getIndentLevel() == 0){
 			printHeader(master_header);
 		}
-		
-		printHeader(header);
-		print(obj);
-		dedentAllln();
+			printHeader(header);
+				print(obj);
+			dedent();
+
+		dedentln();
 	}
 	
+	/**
+	 * Prints the master header and adds corresponding indenter.
+	 */
 	protected void printMaster() {
 		printHeader(master_header);
 	}
 	
+	/**
+	 * Prints the given header and adjust indenture accordingly such that the next line will begin at the end of the header.
+	 * @param header
+	 */
 	protected void printHeader(String header) {
 		PrintStream ps = getPrintStream();
 		
@@ -99,6 +137,9 @@ public class Logger {
 		}
 	}
 	
+	/**
+	 * Prints a set line separator and starts the new line with the accumulated indentation, if any.
+	 */
 	public void endl() {
 		PrintStream ps = getPrintStream();
 		if (ps == null) {
@@ -120,20 +161,33 @@ public class Logger {
 		this.master_header = header;
 	}
 
+	/**
+	 * Returns current indentation as string.
+	 * @return The concatenation of all indenter in the indent stack.
+	 */
 	public String getIndenture() {
 		return indent_str;
 	}
 	
+	/**
+	 * Clears all indentation.
+	 */
 	public void dedentAll() {
 		indent_stack.clear();
 		updateIndenture();
 	}
 	
+	/**
+	 * Clears all indentation and then prints an non-indented fresh new line.
+	 */
 	public void dedentAllln() {
 		dedentAll();
 		endl();
 	}
 	
+	/**
+	 * Decrements the last indentation and prints a new line with the remaining indentation, if any.
+	 */
 	public void dedentln() {
 		dedent();
 		endl();
@@ -144,10 +198,20 @@ public class Logger {
 		indent_stack.forEach(s -> indent_str += s);
 	}
 	
+	/**
+	 * The amount of indentations currently stacked.
+	 * @return The indentation count.
+	 */
 	public int getIndentLevel() {
 		return indent_stack.size();
 	}
 	
+	/**
+	 * Indents by the length of the header such that next line will start at the end of the header.
+	 * Tab characters or any non-singular whitespace characters are also accounted for.
+	 * 
+	 * @param header The string to indent next line to.
+	 */
 	public void indentTo(String header) {
 		String indenter = "";
 		
@@ -158,6 +222,13 @@ public class Logger {
 		indent(indenter);
 	}
 	
+	/**
+	 * Indents whitespace characters <i>length</i> times.
+	 * The whitespace characters will be added as a single indenter.
+	 * 
+	 * @param length The length of a new indenter
+	 * @return If indentation was successful.
+	 */
 	public boolean indentSpaces(int length) {
 		String spaces = "";
 		
@@ -168,6 +239,11 @@ public class Logger {
 		return indent(spaces);
 	}
 	
+	/**
+	 * Adds indenter to the indent stack, which will be update at once and applied since the next call of endl().
+	 * @param indenter The string indenter
+	 * @return If indenter was successfully added to the indent stack
+	 */
 	public boolean indent(String indenter) {
 		return indent(indenter, 1);
 	}
@@ -186,6 +262,9 @@ public class Logger {
 		return all_added;
 	}
 	
+	/**
+	 * Removes the last indenter element from the indent stack.
+	 */
 	public void dedent() {
 		if (!indent_stack.isEmpty()) {
 			indent_stack.pop();
@@ -193,14 +272,24 @@ public class Logger {
 		updateIndenture();
 	}
 	
+	/**
+	 * Sets the current PrintStream as System.out.
+	 */
 	public void setStreamOut() {
 		this.pstype = StreamType.SYSTEM_OUT;
 	}
 	
+	/**
+	 * Sets the current PrintStream as System.err;
+	 */
 	public void setStreamError() {
 		this.pstype = StreamType.SYSTEM_ERR;
 	}
 	
+	/**
+	 * Returns the latest instance of the current PrintStream type, which is either System.out or System.err;
+	 * @return An instance of the current standard PrintStream.
+	 */
 	public PrintStream getPrintStream() {
 		if(pstype == StreamType.SYSTEM_OUT) {
 			return System.out;

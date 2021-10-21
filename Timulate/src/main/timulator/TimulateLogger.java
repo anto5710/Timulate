@@ -130,7 +130,7 @@ public class TimulateLogger<F extends Timable<T, R>, T, R> extends GenericLogger
 		
 		print("", name);
 		endl();
-		
+
 			print(arg, 		"Argument: ");
 			dedentln();
 			
@@ -144,8 +144,7 @@ public class TimulateLogger<F extends Timable<T, R>, T, R> extends GenericLogger
 			dedentln();
 	
 		
-		dedentAll();
-		endl();
+		dedentAllln();
 	}
 	
 	public void headTest(Test<T, R> test, int index, int size) {

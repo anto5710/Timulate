@@ -5,13 +5,19 @@ import java.util.function.Function;
 public class GenericLogger extends Logger{
 	protected ArrayFormat matrix_format = ArrayFormat.EMPTY_TABS;
 	protected ArrayFormat array_format  = ArrayFormat.SQUARE_COMMA;
+	protected int max_printable_size = 2000;
+	
+	public GenericLogger(String master_header, int size) {
+		super(master_header);
+		this.max_printable_size = size;
+	}
 	
 	public GenericLogger(String master_header) {
-		super(master_header);
+		this(master_header, 2000);
 	}
 	
 	public GenericLogger() {
-		super();
+		this(null, 2000);
 	}
 	
 	public void printToString(Object str) {
@@ -68,8 +74,8 @@ public class GenericLogger extends Logger{
 	}
 	
 	protected void printMatrix(Object[] matrix, String bracket_open, String bracket_close, String delimiter, int depth) {
-		if(matrix == null) {
-			print(matrix);
+		if(matrix == null || matrix.length > max_printable_size) {
+			printToString(matrix + " [" + matrix.length + "]");
 			return;
 		}
 		
@@ -104,8 +110,8 @@ public class GenericLogger extends Logger{
 	
 	protected void iterateArray(Object array, int length, String bracket_open, String bracket_close, String delimiter, 
 								Function<Integer, String> iterator) {
-		if(array == null) {
-			print(array);
+		if(array == null || length > max_printable_size) {
+			printToString(array + " [" + length + "]");
 			return;
 		}
 		
@@ -121,6 +127,14 @@ public class GenericLogger extends Logger{
 		
 		array_str += bracket_close;
 		print(array_str);
+	}
+	
+	public int getMaxPrintSize() {
+		return max_printable_size;
+	}
+	
+	public void setMaxPrintSize(int size) {
+		this.max_printable_size = size;
 	}
 	
 	public void printArray(double [] array) {
