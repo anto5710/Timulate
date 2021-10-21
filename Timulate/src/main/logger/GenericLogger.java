@@ -2,9 +2,17 @@ package main.logger;
 
 import java.util.function.Function;
 
-public class PLogger extends Logger{
+public class GenericLogger extends Logger{
 	protected ArrayFormat matrix_format = ArrayFormat.EMPTY_TABS;
 	protected ArrayFormat array_format  = ArrayFormat.SQUARE_COMMA;
+	
+	public GenericLogger(String master_header) {
+		super(master_header);
+	}
+	
+	public GenericLogger() {
+		super();
+	}
 	
 	public void printToString(Object str) {
 		super.print(str);

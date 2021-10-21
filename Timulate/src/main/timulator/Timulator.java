@@ -19,11 +19,14 @@ public class Timulator <F extends Timable<T, R>, T, R> implements ITimulator<F, 
 	public static final int DEFAULT_TESTSET_SIZE = 1000;
 	
 	private boolean fail_break = false;
+	private TimulateLogger<F, T, R> logger;
 	
 	public Timulator(TestWriter<T, R> tester, int set_size, boolean fail_break) {
 		setTestsetSize(set_size);
 		
 		this.tester = tester;
+		
+		this.logger = new TimulateLogger<F, T, R>(this);
 		this.fail_break = fail_break;
 	}
 	
@@ -46,12 +49,12 @@ public class Timulator <F extends Timable<T, R>, T, R> implements ITimulator<F, 
 			return;
 		}
 		
-		headTestset();
+		logger.headTestset();
 		
 		for (int i = 0; i < size; i++) {		
 			Test<T, R> test = tester.generateTest();
 		
-			headTest(test, i, size);
+			logger.headTest(test, i, size);
 			
 			boolean testrun = runTest(test, i, size);
 			
@@ -59,17 +62,17 @@ public class Timulator <F extends Timable<T, R>, T, R> implements ITimulator<F, 
 				break;
 			}
 			
-			footTest(test, i, size);
+			logger.footTest(test, i, size);
 		}
 		
-		footTestset();
+		logger.footTestset();
 	}
 
 	protected boolean runTest(Test<T, R> test, int i, int size) {
 		T arg = test.getArgument();
 		
 		for (F timable : getTimables()) {
-			headResponse(timable, test, i , size);
+			logger.headResponse(timable, test, i , size);
 			
 			Timer timer = get(timable);
 			
@@ -84,67 +87,19 @@ public class Timulator <F extends Timable<T, R>, T, R> implements ITimulator<F, 
 			}
 			
 			if (tester.correct(test, response)) {
-				succeed(e);
+				logger.succeed(e);
 				
 			} else {
-				fail(e);
+				logger.fail(e);
 				if (fail_break) return false;
 			}
 
-			footResponse(e);
+			logger.footResponse(e);
 		}
 		
 		return true;
 	}
 	
-	protected void headTestset() {}
-	
-	protected void footTestset() {
-		F fastest = null, slowest = null;
-		
-		for (F timable : getTimables()) {
-			Timer timer = get(timable);
-			double avg = timer.lapAverage();
-			
-			System.out.printf("[%s]:\tAverage: %fs\\t\\n", timable.getName(), avg/1000D);
-			
-			if(fastest == null || avg < get(fastest).lapAverage()) {
-				fastest = timable;
-			}
-			if(slowest == null || avg > get(slowest).lapAverage()) {
-				slowest = timable;
-			}
-		}
-		
-		System.out.printf("FASTEST [%s]:\n", fastest.getName());
-		System.out.printf("\tAverage: %fs\t\n", get(fastest).lapAverage()/1000D);
-		
-		
-		System.out.printf("SLOWEST [%s]:\n", slowest.getName());
-		System.out.printf("\tAverage: %fs\t", get(slowest).lapAverage()/1000D);
-	}
-
-	protected void headTest(Test<T, R> test, int index, int size) {
-		double p = 1D*(+1)/size;
-		System.out.printf("[TEST]\t#%d (%.1f%%) %s\n", index+1, 100*p, bar(110, p, "=", " "));
-	}	
-	
-	protected void footTest(Test<T, R> test, int index, int size) {}
-	
-	protected void headResponse(F timable, Test<T, R>test, int index, int size) {}
-	
-	protected void footResponse(TimulateEvent<T, R> e) {
-		System.out.println("\t" + e.getShortTrace());
-	}
-
-	@Override
-	public void fail(TimulateEvent<T, R> e) {
-		System.err.printf("[%s] TEST FAIL\n", e.getTimable().getName());
-		System.err.println(e.getStackTrace());
-	}
-
-	@Override
-	public void succeed(TimulateEvent<T, R> e) {}
 	
 	
 	@Override
@@ -161,6 +116,7 @@ public class Timulator <F extends Timable<T, R>, T, R> implements ITimulator<F, 
 	public Map<F, Timer> getTimerMap() {
 		return timerMap;
 	}
+
 
 	@SuppressWarnings("unchecked")
 	@Override

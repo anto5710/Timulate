@@ -81,7 +81,7 @@ public class Timer {
 	 * @return The average lap measure.
 	 */
 	public double lapAverage() {
-		return 1D * lap_total / lap_cnt;
+		return lap_cnt <= 0 ? 0D : 1D * lap_total / lap_cnt;
 	}
 	
 	/**

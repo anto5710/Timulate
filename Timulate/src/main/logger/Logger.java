@@ -5,8 +5,8 @@ import java.util.Stack;
 
 public class Logger {
 	
-	private   StreamType	pstype		 = StreamType.SYSTEM_OUT;
 	protected Stack<String> indent_stack = new Stack<>();
+	private   StreamType	pstype		 = StreamType.SYSTEM_OUT;
 
 	protected String indent_str		= "";
 	private   String master_header	= null;
@@ -27,8 +27,12 @@ public class Logger {
 	}
 	
 	public void println(Object obj) {
+		if (getIndentLevel() == 0){
+			printMaster();
+		}
+		
 		print(obj);
-		dedentln();
+		dedentAllln();
 	}
 	
 	public void print(Object obj) {
@@ -53,37 +57,46 @@ public class Logger {
 		}
 	}
 	
+	public void printfln(String format, String header, Object ... args) {
+		if (getIndentLevel() == 0){
+			printMaster();
+		}
+		
+		printf(format, header, args);
+		dedentln();
+	}
+	
+	public void printf(String format, String header, Object ... args) {
+		printHeader(header);
+		print(String.format(format, args));
+	}
+	
 	public void print(Object obj, String header) {
-		PrintStream ps = getPrintStream();
-		if (ps == null) {
-			return;
-		}
-		
-		if (header != null && !header.isEmpty()) {
-			ps.print(header);
-			indentTo(header);
-		}
-		
+		printHeader(header);		
 		print(obj);
 	}
 	
 	public void println(Object obj, String header) {
+		if (getIndentLevel() == 0){
+			printHeader(master_header);
+		}
+		
+		printHeader(header);
+		print(obj);
+		dedentAllln();
+	}
+	
+	protected void printMaster() {
+		printHeader(master_header);
+	}
+	
+	protected void printHeader(String header) {
 		PrintStream ps = getPrintStream();
-		if (ps == null) {
-			return;
-		}
 		
-		if ((getIndentLevel() == 0) && (master_header != null)){
-			ps.print(master_header);
-			indentTo(master_header);
-		}
-		
-		if (header != null && !header.isEmpty()) {
+		if (ps != null && header != null && !header.isEmpty()) {
 			ps.print(header);
 			indentTo(header);
 		}
-		
-		println(obj);
 	}
 	
 	public void endl() {
@@ -116,8 +129,13 @@ public class Logger {
 		updateIndenture();
 	}
 	
-	public void dedentln() {
+	public void dedentAllln() {
 		dedentAll();
+		endl();
+	}
+	
+	public void dedentln() {
+		dedent();
 		endl();
 	}
 	

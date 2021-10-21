@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.Set;
 
 import main.Timer;
-import main.event.TimulateEvent;
 import main.test.Timable;
 
 /**
@@ -12,8 +11,7 @@ import main.test.Timable;
  * Its purpose is to timulate, an act of mass-testing a test-set for each Timable solvers to compare their efficiencies.
  * 
  * @author anto5710
- *
- * @param <F> A timable task solver or responder.
+ * @param <F> The timable that solves input T into response R.
  * @param <T> The argument-type of tests.
  * @param <R> The return-type of tests.
  */
@@ -32,7 +30,4 @@ public interface ITimulator<F extends Timable<T, R>, T, R> {
 
 	public int  getTestsetSize();
 	public void setTestsetSize(int size);
-		
-	public void succeed(TimulateEvent<T, R> e);
-	public void fail(TimulateEvent<T, R> e);
 }
