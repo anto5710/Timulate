@@ -4,11 +4,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import main.Timer;
 import main.event.TimulateEvent;
 import main.test.Test;
 import main.test.TestWriter;
 import main.test.Timable;
+import main.util.Timer;
 
 
 public class Timulator <F extends Timable<T, R>, T, R> implements ITimulator<F, T, R>{

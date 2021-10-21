@@ -1,4 +1,4 @@
-package main;
+package main.util;
 
 /**
  * A System-time based timer, or more precisely, a lap-timer.<br>
@@ -88,7 +88,7 @@ public class Timer {
 	 * The average of all lap measures in seconds.
 	 * @return The average lap measure.
 	 */
-	public double lapAvarageSeconds() {
+	public double lapAverageSeconds() {
 		return millsToSeconds(lapAverage());
 	}
 	

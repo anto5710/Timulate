@@ -5,11 +5,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import main.Timer;
 import main.event.TimulateEvent;
 import main.logger.GenericLogger;
 import main.test.Test;
 import main.test.Timable;
+import main.util.Timer;
 
 public class TimulateLogger<F extends Timable<T, R>, T, R> extends GenericLogger {
 	private ITimulator<F, T, R> timulator;
@@ -33,12 +33,21 @@ public class TimulateLogger<F extends Timable<T, R>, T, R> extends GenericLogger
 
 		@Override
 		public int compare(F o1, F o2) {
-			return (int) (1000 * (timulator.get(o1).lapAverage() - timulator.get(o2).lapAverage()));
+			double comp = (timulator.get(o1).lapAverage() - timulator.get(o2).lapAverage());
+			
+			if (comp > 0) {
+				return 1;
+				
+			} else if (comp < 0) {
+				return -1;
+			}
+			
+			return 0;
 		}
 	};
 	
 	public void footTestset() {
-		print(bar(132, 1.0, "-", ""));
+		print(bar(120, 1.0, "-", ""));
 		endl();
 		
 		List<F> timables = new ArrayList<F>(timulator.getTimables());
@@ -48,20 +57,30 @@ public class TimulateLogger<F extends Timable<T, R>, T, R> extends GenericLogger
 		print("[RESULTS]: ");
 		endl();
 		
+		double standard = -1;
+		if (!timables.isEmpty()) {
+			F fastest = timables.get(0);
+			standard = timulator.get(fastest).lapAverageSeconds();
+		}
+		
 		for (int i = 0; i < timables.size(); i++) {
 			F timable = timables.get(i);
 			
 			Timer timer = timulator.get(timable);
-			double avgs = timer.lapAvarageSeconds();
+			double avgs = timer.lapAverageSeconds();
+			
+			double efficiency = standard == -1 ? 100D : 100D * standard / avgs;
 			
 			String indexer = "#" + (i+1) + ":\t";
 				
-			printf("[%s] -- Average: %fs", indexer, timable.getName(), avgs);
+			printf("[%s]\t-- Average: %fs -- Efficiency: %.0f%%", 
+					indexer, timable.getName(), avgs, efficiency);
 		
 			if (i == 0) {
-				print(" [FASTEST]");
+				print(" -- [FASTEST]");
+				
 			} else if(i == timables.size() - 1) {
-				print(" [SLOWEST]");
+				print(" -- [SLOWEST]");
 			}
 			
 			dedent();
@@ -75,24 +94,16 @@ public class TimulateLogger<F extends Timable<T, R>, T, R> extends GenericLogger
 		setStreamError();
 		
 		String name = "[" + e.getTimable().getName() + "]: ";
+		
 		printfln("TEST FAIL", name);
+		
 		printStackTrace(e);
 		
 		dedent();
-//		dedentAll();
 		
 		setStreamOut();
 	}
-	
-	public void headTest(Test<T, R> test, int index, int size) {
-		double p = 1D * (index+1)/size;
 		
-		printMaster();
-		printf("#%d (%.1f%%) %s", null, index+1, 100D*p, bar(105, p, "=", " "));
-		endl();
-		endl();
-	}
-	
 	public void printShortTrace(TimulateEvent<T, R> e) {
 		R response = e.getResponse();
 
@@ -112,7 +123,6 @@ public class TimulateLogger<F extends Timable<T, R>, T, R> extends GenericLogger
 		R response = e.getResponse();
 		
 		String name	 = e.getTimable().getName();
-//		double lap	 = e.getTimer().lapAverage();
 		long last_lap = e.getTimer().lastLap();
 		
 		printf("Test (%d/%d)", "", e.getIndex(), e.getSize());
@@ -138,6 +148,15 @@ public class TimulateLogger<F extends Timable<T, R>, T, R> extends GenericLogger
 		endl();
 	}
 	
+	public void headTest(Test<T, R> test, int index, int size) {
+		double p = 1D * (index+1)/size;
+		
+		printMaster();
+		printf("#%d (%.1f%%) %s", null, index+1, 100D*p, bar(105, p, "=", " "));
+		endl();
+		endl();
+	}
+	
 	public void footTest(Test<T, R> test, int index, int size) {
 		dedentAllln();
 		endl();
@@ -153,13 +172,15 @@ public class TimulateLogger<F extends Timable<T, R>, T, R> extends GenericLogger
 		int fill_l = (int) (width * p);
 		
 		String bar = "";
-		for(int i = 0; i < fill_l; i+=fill.length()) {
+		
+		for(int i = 0; i < fill_l; i += fill.length()) {
 			bar += fill;
 		}
 		
-		for(int i = 0; i < width - fill_l; i+=empt.length()) {
+		for(int i = 0; i < width - fill_l; i += empt.length()) {
 			bar += empt;
 		}
+		
 		return bar;
 	}
 }

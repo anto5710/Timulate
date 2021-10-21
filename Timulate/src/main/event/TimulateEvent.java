@@ -1,8 +1,8 @@
 package main.event;
 
-import main.Timer;
 import main.test.Test;
 import main.test.Timable;
+import main.util.Timer;
 
 public class TimulateEvent <T, R> implements ITestEvent<T, R>{
 	private Timable<T, R> timable;

@@ -3,8 +3,8 @@ package main.timulator;
 import java.util.Map;
 import java.util.Set;
 
-import main.Timer;
 import main.test.Timable;
+import main.util.Timer;
 
 /**
  * A Timulator is defined as a Particulatizing encompasser that maps a Timable solver to individual timers.
